@@ -1,0 +1,1 @@
+select * from tasty_bytes_dbt_db.dev.sales_metrics_by_location;
