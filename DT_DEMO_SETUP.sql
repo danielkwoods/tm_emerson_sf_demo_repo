@@ -45,13 +45,42 @@ file_name=METADATA$FILENAME, last_updated_timestamp = METADATA$FILE_LAST_MODIFIE
 );
 select * from test_dt;
 
-create or replace dynamic table test_dt 
+use database snowflake;
+create task 
+insert into log_table
+select * from table(information_schema.dynamic_table_refresh_history(error_only=>True));
+/*&
+DT_A=>DT_D
+DT_B=>
+DT_C=>DT_E
+*/
+create or replace dynamic table lz.public.test_dt 
 warehouse=compute_wh
-target_lag=DOWNSTREAM
+target_lag='1 day'
+refresh_mode=incremental
 as
-select *
+select file_name,
+last_updated_timestamp as min_ts
 from test_landing_zone
+left join dt_dependency;
+
 qualify rank() over (partition by file_name order by last_updated_timestamp desc)=1;
+
+create or replace dynamic table lz.public.test_dt 
+warehouse=compute_wh
+target_lag='1 day'
+refresh_mode=incremental
+as
+    
+
+
+
+select * from lz.public.test_landing_zone;
+insert into lz.public.test_landing_zone values (8,'Test2',current_date,2,current_timestamp());
+
+alter table lz.public.test_landing_zone drop column file_name;
+
+alter dynamic table  lz.public.test_dt  refresh;
 
  create or replace view test_stage_delete as 
  
